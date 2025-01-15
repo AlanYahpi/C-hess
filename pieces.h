@@ -8,8 +8,7 @@
 #include "include.h"
 
 #define pawnsNumber 8
-//#define totalPieces 32
-#define totalPieces 16
+#define totalPieces 32
 
 #define textureScale 1.5
 
@@ -69,9 +68,10 @@ int generatePiece
 		(int color, int relativeLine, char column, int pieceType,
 		 Texture2D * colorTextures,  piece * pieceToPlace){
 		
-	int absoluteLine = 0;
+	unsigned int absoluteLine = 0;
 
 	 //relative line 0 = cordinate y 1/8
+	if (absoluteLine > 8) {printf("Relative line out of boundaries. %i > 8.\n", absoluteLine); return 1;}
 	 
 	switch (color){
 		case white:
@@ -93,7 +93,7 @@ int generatePiece
 	pieceToPlace->texture = &colorTextures[pieceType];
 
 
-	printf("Placed piece on %c\t%c\n", pieceToPlace->position.x, pieceToPlace->position.y);
+	printf("Placed piece on %c%c, able = %i\n", pieceToPlace->position.x, pieceToPlace->position.y, pieceToPlace->able);
 
 	return 0;
 }
@@ -110,7 +110,12 @@ int initPieces(piece * piecesG, Texture2D * whiteTextures, Texture2D * blackText
 	whiteTextures[tower] = LoadTexture("resources/Wrook.png");
 	blackTextures[tower] = LoadTexture("resources/Brook.png");
 
+	whiteTextures[queen] = LoadTexture("resources/Wqueen.png");
+	blackTextures[queen] = LoadTexture("resources/Bqueen.png");
 
+
+	whiteTextures[king] = LoadTexture("resources/Wking.png");
+	blackTextures[king] = LoadTexture("resources/Bking.png");
 
 	
 	int i = 0;
@@ -119,36 +124,38 @@ int initPieces(piece * piecesG, Texture2D * whiteTextures, Texture2D * blackText
 				1, ('a' + i), pawn, whiteTextures, &piecesG[i]);
 		generatePiece(black,
 				1, ('a' + i), pawn, blackTextures, &piecesG[i+8]);
-		printf("i = %i\n", i);
-		printf("i + 8 = %i\n", i+8);
-		
-
-		/*
-		piecesG[i].color = 'w';
-		piecesG[i].position.x = ('a' + i);
-		piecesG[i].position.y = '2';
-		piecesG[i].able = true;
-		piecesG[i].texture = &globalTextures[Wpawn];
-		piecesG[i].type = 'p'; */
+		printf("i : %i\ni + 8: %i\n\n", i, i+8);
 	}
-	/*
-	for (; i < pawnsNumber*2; i++){
-		printf("i : %i\n\n", i);
-		piecesG[i].color = 'b';
-		piecesG[i].position.x = ('a' + (i - (pawnsNumber)) );
-		piecesG[i].position.y = '7';
-		piecesG[i].able = true;
-		piecesG[i].texture = &globalTextures[Bpawn];
-		piecesG[i].type = 'p';
-	} */
 	//Towers
-	for (int mirroring = 0;mirroring != 0; i++){
-	generatePiece(white, 0, 'a' + mirroring, tower, whiteTextures, &piecesG[i]);
-	printf("modified %i\n", i);
-	generatePiece(black, 0, 'a' + mirroring, tower, blackTextures, &piecesG[i+2]);
-	printf("modified %i\n", i+2);
-	mirroring = 8;
-	}
+	i += 8;
+	printf("Towers starts at i : %i\n", i);
+
+	generatePiece(white, 0, 'a', tower, whiteTextures, &piecesG[i++]);
+	generatePiece(white, 0, 'h', tower, whiteTextures, &piecesG[i++]);
+	generatePiece(black, 0, 'a', tower, blackTextures, &piecesG[i++]);
+	generatePiece(black, 0, 'h', tower, blackTextures, &piecesG[i++]);
+	printf("Last i: %i\n", i);
+
+	//knight
+	generatePiece(white, 0, 'b', knight, whiteTextures, &piecesG[i++]);
+	generatePiece(white, 0, 'g', knight, whiteTextures, &piecesG[i++]);
+	generatePiece(black, 0, 'b', knight, blackTextures, &piecesG[i++]);
+	generatePiece(black, 0, 'g', knight, blackTextures, &piecesG[i++]);
+
+	//bishop
+	generatePiece(white, 0, 'c', bishop, whiteTextures, &piecesG[i++]);
+	generatePiece(white, 0, 'f', bishop, whiteTextures, &piecesG[i++]);
+	generatePiece(black, 0, 'c', bishop, blackTextures, &piecesG[i++]);
+	generatePiece(black, 0, 'f', bishop, blackTextures, &piecesG[i++]);
+
+	//queens
+	generatePiece(white, 0, 'd', queen, whiteTextures, &piecesG[i++]);
+	generatePiece(black, 0, 'd', queen, blackTextures, &piecesG[i++]);
+
+	//kings
+	generatePiece(white, 0, 'e', king, whiteTextures, &piecesG[i++]);
+	generatePiece(black, 0, 'e', king, blackTextures, &piecesG[i]);
+
 }
 
 chessCords mouseToChess(){
@@ -186,10 +193,12 @@ int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMove
 	short int colorMultiplier;
 	short int pawnEatable = 0;
 	int frontPawn = 0;
+	chessCords checkPlace = {'a', '1'};
+	short int placeGotten;
 
 	if (selectedPiece >= 0){
 		switch (piecesG->type){
-			case 'p':
+			case pawn:
 
 				//invert direction of pawns movement
 				if (piecesG[selectedPiece].color == 'w'){
@@ -266,6 +275,12 @@ int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMove
 
 				}
 				break;
+			/*
+			case tower:
+				while (onBoard(checkPlace) && !placeGotten){
+
+				}*/
+
 		}
 	}
 	else {
@@ -317,7 +332,7 @@ int movePieces(piece * piecesG, int * selectedPiece){
 
 int drawPieces(piece * piecesG){
 
-	for (int i = 0; i < pawnsNumber*2; i++){
+	for (int i = 0; i < totalPieces; i++){
 		DrawTextureEx(*piecesG[i].texture,
 				(Vector2){
 					(float) (chessToMath(piecesG[i].position.x, 1) ) - 

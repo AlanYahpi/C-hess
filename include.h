@@ -1,6 +1,7 @@
 #ifndef INCLUDE_H
 #define INCLUDE_H
 
+#include "pieces.h"
 #include <stdio.h>
 #include <raylib.h>
 
@@ -17,7 +18,21 @@
 
 #define sqsize (screenH/8)
 
+int onBoard(chessCords piece){
+	if (
+			piece.x < 'h' && piece.x > 'a'
+			&&
+			piece.y < '8' && piece.y > '1'
+			){
+		return true;
+	} else {
+		return false;
+	}
+}
 
+int charToInt(char character){
+	return (character - 48);
+}
 
 int chessToMath(char pieceChessCord, int whichCord){
 	//1 = X (letter)

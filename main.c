@@ -9,8 +9,6 @@ int main (){
 	InitWindow(screenW, screenH, "chess bc i am bored");
 	SetTargetFPS(60);
 
-
-
 	piece piecesG[totalPieces];
 	Texture2D whiteTextures[textureCount];
 	Texture2D blackTextures[textureCount];
