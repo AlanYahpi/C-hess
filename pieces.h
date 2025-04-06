@@ -70,26 +70,6 @@ int onBoard(chessCords piece){
 	}
 }
 
-int relativeCordGottenByMe(piece * piecesG,int originPieceIndex, int relativeX, int relativeY, short color){
-	short pieceGotten = 0;
-	for (int i = 0; i < totalPieces; i++){
-		if (
-				(piecesG[i].position.x == (piecesG[originPieceIndex].position.x + relativeX) )
-				&&
-				(piecesG[i].position.y == (piecesG[originPieceIndex].position.y + relativeY) )
-				&&
-				(i != originPieceIndex)
-				&& 
-				(piecesG[i].color == color)
-				){
-			pieceGotten = true;
-			break;
-		}
-	}
-	return pieceGotten;
-}
-
-
 int relativeCordGotten(piece * piecesG,int originPieceIndex, int relativeX, int relativeY){
 	short piecesOnIt = 0;
 	short relativeColor = -1;
@@ -110,17 +90,18 @@ int relativeCordGotten(piece * piecesG,int originPieceIndex, int relativeX, int 
 	else return gotten;
 }
 
-short int positionGotten (chessCords askedPosition, piece * piecesG){
+short int positionGotten (chessCords askedPosition, piece * piecesG, int askerIndex){
 	for (int i = 0; i < totalPieces; i++){
 		if (
 				askedPosition.x == piecesG[i].position.x
 				&&
 				askedPosition.y == piecesG[i].position.y
 				){
-			return true;
+			if (piecesG[i].color == piecesG[askerIndex].color) return gottenByMe;
+			return gotten;
 		}
 	}
-		return false;
+		return notGotten;
 }
 
 int linearMovementEvaluation(short directionX, short directionY, int indexInit, piece * piecesG, int selectedPiece, chessCords * posibleMoves){
@@ -131,10 +112,12 @@ int linearMovementEvaluation(short directionX, short directionY, int indexInit, 
 	while (onBoard(checkPlace) && !placeGotten){
 		checkPlace.x += directionX;
 		checkPlace.y += directionY;
+		placeGotten = positionGotten(checkPlace, piecesG, selectedPiece);
+		if (placeGotten != gottenByMe){
+			posibleMoves[i] = checkPlace;
+			i++;
 
-		posibleMoves[i] = checkPlace;
-		i++;
-		placeGotten = positionGotten(checkPlace, piecesG);
+		}
 	}
 }
 
@@ -364,41 +347,74 @@ int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMove
 				linearMovementEvaluation(1, -1, 52, piecesG, selectedPiece, posibleMoves);
 				break;
 			case knight:
+				if (relativeCordGotten(piecesG,selectedPiece, 2, 1) != 2){
 					posibleMoves[0] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 2),
 													(char) (piecesG[selectedPiece].position.y + 1)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, 2, -1) != 2){
 					posibleMoves[1] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 2),
 													(char) (piecesG[selectedPiece].position.y - 1)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, -2, 1) != 2){
 					posibleMoves[2] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 2),
 													(char) (piecesG[selectedPiece].position.y + 1)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, -2, -1) != 2){
 					posibleMoves[3] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 2),
 													(char) (piecesG[selectedPiece].position.y - 1)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, 1, 2) != 2){
 					posibleMoves[4] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 1),
 													(char) (piecesG[selectedPiece].position.y + 2)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, -1, 2) != 2){
 					posibleMoves[5] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 1),
 													(char) (piecesG[selectedPiece].position.y + 2)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, 1, -2) != 2){
 					posibleMoves[6] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 1),
 													(char) (piecesG[selectedPiece].position.y - 2)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, -1, -2) != 2){
 					posibleMoves[7] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 1),
 													(char) (piecesG[selectedPiece].position.y - 2)};
+				}
 				break;
+
 			case king:
 					//Regular
+				if (relativeCordGotten(piecesG,selectedPiece, 1, 0) != 2){
 					posibleMoves[0] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 1),
 													(char) (piecesG[selectedPiece].position.y + 0)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, 1, 1) != 2){
 					posibleMoves[1] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 1),
 													(char) (piecesG[selectedPiece].position.y + 1)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, 0, 1) != 2){
 					posibleMoves[2] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 0),
 													(char) (piecesG[selectedPiece].position.y + 1)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, -1, 0) != 2){
 					posibleMoves[3] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 1),
 													(char) (piecesG[selectedPiece].position.y + 0)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, -1, -1) != 2){
 					posibleMoves[4] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 1),
 													(char) (piecesG[selectedPiece].position.y - 1)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, 0, -1) != 2){
 					posibleMoves[5] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 0),
 													(char) (piecesG[selectedPiece].position.y - 1)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, 1, -1) != 2){
 					posibleMoves[6] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 1),
 													(char) (piecesG[selectedPiece].position.y - 1)};
+				}
+				if (relativeCordGotten(piecesG,selectedPiece, -1, 1) != 2){
 					posibleMoves[7] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 1),
 													(char) (piecesG[selectedPiece].position.y + 1)};
+				}
 					if (gameRules[piecesG[selectedPiece].color].castleR 
 							&&
 							!(relativeCordGotten(piecesG,selectedPiece, 2, 0))
