@@ -18,8 +18,8 @@ typedef struct chessCords {
 } chessCords;
 typedef struct piece {
 	chessCords position;
-	int able; 			//alpha
-	char color;
+	bool able; 			//alpha
+	short int color;
 	Texture2D * texture;
 	int type;
 	/* k 	knight
@@ -30,6 +30,11 @@ typedef struct piece {
 	 * c 	king
 	 */
 } piece;
+
+struct rules {
+	bool castleR;
+	bool castleL;
+};
 
 
 #define textureCount 6
@@ -45,11 +50,49 @@ typedef struct piece {
 #define white 0
 #define black 1
 
-#define maxPosibleMoves 27
+#define maxPosibleMoves 59
+
+#define gotten 1
+#define gottenByMe 2
+#define notGotten 0
+
+
+
+int onBoard(chessCords piece){
+	if (
+			piece.x <= 'h' && piece.x >= 'a'
+			&&
+			piece.y <= '8' && piece.y >= '1'
+			){
+		return true;
+	} else {
+		return false;
+	}
+}
+
+int relativeCordGottenByMe(piece * piecesG,int originPieceIndex, int relativeX, int relativeY, short color){
+	short pieceGotten = 0;
+	for (int i = 0; i < totalPieces; i++){
+		if (
+				(piecesG[i].position.x == (piecesG[originPieceIndex].position.x + relativeX) )
+				&&
+				(piecesG[i].position.y == (piecesG[originPieceIndex].position.y + relativeY) )
+				&&
+				(i != originPieceIndex)
+				&& 
+				(piecesG[i].color == color)
+				){
+			pieceGotten = true;
+			break;
+		}
+	}
+	return pieceGotten;
+}
 
 
 int relativeCordGotten(piece * piecesG,int originPieceIndex, int relativeX, int relativeY){
-	int piecesOnIt = 0;
+	short piecesOnIt = 0;
+	short relativeColor = -1;
 	for (int i = 0; i < totalPieces; i++){
 		if (
 				(piecesG[i].position.x == (piecesG[originPieceIndex].position.x + relativeX) )
@@ -58,10 +101,41 @@ int relativeCordGotten(piece * piecesG,int originPieceIndex, int relativeX, int 
 				&&
 				(i != originPieceIndex)
 				){
-			piecesOnIt++;
+			piecesOnIt = true;
+			relativeColor = piecesG[i].color;
 		}
 	}
-	return piecesOnIt;
+	if (!piecesOnIt) return notGotten;
+	if (piecesG[originPieceIndex].color == relativeColor) return gottenByMe;
+	else return gotten;
+}
+
+short int positionGotten (chessCords askedPosition, piece * piecesG){
+	for (int i = 0; i < totalPieces; i++){
+		if (
+				askedPosition.x == piecesG[i].position.x
+				&&
+				askedPosition.y == piecesG[i].position.y
+				){
+			return true;
+		}
+	}
+		return false;
+}
+
+int linearMovementEvaluation(short directionX, short directionY, int indexInit, piece * piecesG, int selectedPiece, chessCords * posibleMoves){
+	chessCords checkPlace = piecesG[selectedPiece].position;
+	short placeGotten = false;
+	int i = indexInit;
+
+	while (onBoard(checkPlace) && !placeGotten){
+		checkPlace.x += directionX;
+		checkPlace.y += directionY;
+
+		posibleMoves[i] = checkPlace;
+		i++;
+		placeGotten = positionGotten(checkPlace, piecesG);
+	}
 }
 
 int generatePiece 
@@ -76,11 +150,11 @@ int generatePiece
 	switch (color){
 		case white:
 			absoluteLine = 1 + relativeLine;
-			pieceToPlace->color = 'w';
+			pieceToPlace->color = white;
 			break;
 		case black:
 			absoluteLine = 8 - relativeLine;
-			pieceToPlace->color = 'b';
+			pieceToPlace->color = black;
 			break;
 	}
 
@@ -186,7 +260,7 @@ chessCords mouseToChess(){
 	return cordinates;
 }
 
-int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMoves){
+int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMoves,struct rules * gameRules){
 
 	int i = 0;
 	char initialPawnPos;
@@ -194,14 +268,14 @@ int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMove
 	short int pawnEatable = 0;
 	int frontPawn = 0;
 	chessCords checkPlace = {'a', '1'};
-	short int placeGotten;
+	short int placeGotten = false;
 
 	if (selectedPiece >= 0){
-		switch (piecesG->type){
+		switch (piecesG[selectedPiece].type){
 			case pawn:
 
 				//invert direction of pawns movement
-				if (piecesG[selectedPiece].color == 'w'){
+				if (piecesG[selectedPiece].color == white){
 					colorMultiplier = 1;
 					initialPawnPos = '2';
 				} else {
@@ -214,11 +288,6 @@ int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMove
 					//set posible moves
 					//mov +1
 					if (
-							/*
-							(piecesG[selectedPiece].position.y + (1*colorMultiplier) ) == piecesG[j].position.y 
-							&&
-    						piecesG[selectedPiece].position.x == piecesG[j].position.x 
-							*/ 
 							relativeCordGotten(
 								piecesG,selectedPiece, 0, 1*colorMultiplier)
 
@@ -226,18 +295,10 @@ int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMove
 						frontPawn = true;
 					}
 
+					//diagonal moves
 					if (
-							/*
-							(piecesG[selectedPiece].position.y + (1*colorMultiplier)) == piecesG[j].position.y
-							&&
-							 	(((piecesG[selectedPiece].position.x + 1) == piecesG[j].position.x)
-									||
-								 ((piecesG[selectedPiece].position.x - 1) == piecesG[j].position.x) )
-							&&
-							(piecesG[j].color != piecesG[selectedPiece].color)
-							*/
 							relativeCordGotten(
-								piecesG, selectedPiece, 1, 1*colorMultiplier)
+								piecesG, selectedPiece, 1, 1*colorMultiplier) == 1
 					   ){
 						posibleMoves[0] = (chessCords)
 							{(char) (piecesG[selectedPiece].position.x + 1 ), 
@@ -246,7 +307,7 @@ int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMove
 					} 
 					if (
 							relativeCordGotten(
-								piecesG, selectedPiece, -1, 1*colorMultiplier)
+								piecesG, selectedPiece, -1, 1*colorMultiplier) == 1
 							){
 						posibleMoves[1] = (chessCords)
 							{(char) (piecesG[selectedPiece].position.x + -1 ), 
@@ -264,7 +325,9 @@ int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMove
 							(char)(piecesG[selectedPiece].position.y + (1*colorMultiplier)),
 						};
 					//if a pawn is on initial position
-					if (piecesG[selectedPiece].position.y == initialPawnPos){
+					if (piecesG[selectedPiece].position.y == initialPawnPos
+							&& 
+							!relativeCordGotten(piecesG, selectedPiece, 0, 2)){
 						posibleMoves[3] = 
 							(chessCords) {
 								piecesG[selectedPiece].position.x,
@@ -275,11 +338,88 @@ int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMove
 
 				}
 				break;
-			/*
 			case tower:
-				while (onBoard(checkPlace) && !placeGotten){
 
-				}*/
+				//index init is the initial index for the posile moves array, it is based on the maximus posible moves that can exist
+				linearMovementEvaluation(1, 0, 0, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(-1, 0, 8, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(0, 1, 16, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(0, -1, 24, piecesG, selectedPiece, posibleMoves);
+				break;
+			case queen:
+				linearMovementEvaluation(1, 0, 0, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(-1, 0, 8, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(0, 1, 16, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(0, -1, 24, piecesG, selectedPiece, posibleMoves);
+
+				linearMovementEvaluation(1, 1, 31, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(-1, 1, 38, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(-1, -1, 45, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(1, -1, 52, piecesG, selectedPiece, posibleMoves);
+				break;
+			case bishop:
+				linearMovementEvaluation(1, 1, 31, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(-1, 1, 38, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(-1, -1, 45, piecesG, selectedPiece, posibleMoves);
+				linearMovementEvaluation(1, -1, 52, piecesG, selectedPiece, posibleMoves);
+				break;
+			case knight:
+					posibleMoves[0] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 2),
+													(char) (piecesG[selectedPiece].position.y + 1)};
+					posibleMoves[1] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 2),
+													(char) (piecesG[selectedPiece].position.y - 1)};
+					posibleMoves[2] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 2),
+													(char) (piecesG[selectedPiece].position.y + 1)};
+					posibleMoves[3] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 2),
+													(char) (piecesG[selectedPiece].position.y - 1)};
+					posibleMoves[4] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 1),
+													(char) (piecesG[selectedPiece].position.y + 2)};
+					posibleMoves[5] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 1),
+													(char) (piecesG[selectedPiece].position.y + 2)};
+					posibleMoves[6] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 1),
+													(char) (piecesG[selectedPiece].position.y - 2)};
+					posibleMoves[7] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 1),
+													(char) (piecesG[selectedPiece].position.y - 2)};
+				break;
+			case king:
+					//Regular
+					posibleMoves[0] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 1),
+													(char) (piecesG[selectedPiece].position.y + 0)};
+					posibleMoves[1] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 1),
+													(char) (piecesG[selectedPiece].position.y + 1)};
+					posibleMoves[2] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 0),
+													(char) (piecesG[selectedPiece].position.y + 1)};
+					posibleMoves[3] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 1),
+													(char) (piecesG[selectedPiece].position.y + 0)};
+					posibleMoves[4] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 1),
+													(char) (piecesG[selectedPiece].position.y - 1)};
+					posibleMoves[5] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 0),
+													(char) (piecesG[selectedPiece].position.y - 1)};
+					posibleMoves[6] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 1),
+													(char) (piecesG[selectedPiece].position.y - 1)};
+					posibleMoves[7] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 1),
+													(char) (piecesG[selectedPiece].position.y + 1)};
+					if (gameRules[piecesG[selectedPiece].color].castleR 
+							&&
+							!(relativeCordGotten(piecesG,selectedPiece, 2, 0))
+							&&
+							!(relativeCordGotten(piecesG,selectedPiece, 1, 0))
+							){
+						posibleMoves[8] = (chessCords) {(char) (piecesG[selectedPiece].position.x + 2),
+														(char) (piecesG[selectedPiece].position.y)};
+					}
+					if (gameRules[piecesG[selectedPiece].color].castleL
+							&&
+							!(relativeCordGotten(piecesG,selectedPiece, -2, 0))
+							&&
+							!(relativeCordGotten(piecesG,selectedPiece, -1, 0))
+							){
+						posibleMoves[9] = (chessCords) {(char) (piecesG[selectedPiece].position.x - 2),
+														(char) (piecesG[selectedPiece].position.y)};
+					}
+
+					break;
+
 
 		}
 	}
@@ -288,6 +428,8 @@ int getPosibleMoves(piece * piecesG, int selectedPiece, chessCords * posibleMove
 			posibleMoves[i] = (chessCords) {0,0};
 		}
 	}
+
+	printf("Piece %i\n", selectedPiece);
 
 	return 0;
 }
@@ -300,26 +442,76 @@ int drawPosibleMoves( piece * piecesG, int selectedPiece, chessCords * posibleMo
 					chessToMath(posibleMoves[i].y, 2),
 					20, 
 					(Color){200,200,200,255});
+			if (posibleMoves[i].x > 0){
+				//printf("Posible move at %c%c\n", posibleMoves[i].x, posibleMoves[i].y);
+
+			}
 		}
 	}
 	return 0;
 }
 
 
-int movePieces(piece * piecesG, int * selectedPiece){
+int movePieces(piece * piecesG, int * selectedPiece, chessCords * posibleMoves, struct rules * gameRules){
 	if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT)){
 
 		if (*selectedPiece >= 0){
 			chessCords mouseCords = mouseToChess();
 
-			piecesG[*selectedPiece].position = mouseCords;
+			for(int i = 0; i < maxPosibleMoves; i++){
+				if ((mouseCords.x == posibleMoves[i].x) && (mouseCords.y == posibleMoves[i].y) ){
+
+					for(int j = 0; j < totalPieces; j++){
+						if ((mouseCords.x == piecesG[j].position.x) && (mouseCords.y == piecesG[j].position.y) && (j != *selectedPiece)){
+							piecesG[j].able = false;
+							break;
+							//piecesG[*selectedPiece].position = mouseCords;
+
+						}
+					}
+					switch (piecesG[*selectedPiece].type) {
+						case king:
+
+							//The posibleMoves index is where is gonna be located the posible castleing square
+
+							if ((mouseCords.x == posibleMoves[8].x) /*Right castle*/ && (mouseCords.y == posibleMoves[8].y) ){
+								//piece 17 is the white rook, piece 17+2 is the black one. piecesG[x].color is 0 or 1.
+								piecesG[17+(2*piecesG[*selectedPiece].color)].position.x = 'f';
+							}
+							
+							if ((mouseCords.x == posibleMoves[9].x) /*Right castle*/ && (mouseCords.y == posibleMoves[9].y) ){
+								//piece 16 is the white rook, piece 16+2 is the black one. piecesG[x].color is 0 or 1.
+								piecesG[16+(2*piecesG[*selectedPiece].color)].position.x = 'd';
+							}
+
+								gameRules[piecesG[*selectedPiece].color].castleR = false;
+								gameRules[piecesG[*selectedPiece].color].castleL = false;
+							break;
+						case tower:
+
+							if (piecesG[*selectedPiece].position.y != '1') { gameRules[piecesG[*selectedPiece].color].castleL = false; gameRules[piecesG[*selectedPiece].color].castleR = false; break;}
+
+
+							if (piecesG[*selectedPiece].position.x != 'h') {
+								gameRules[piecesG[*selectedPiece].color].castleR = false;
+							} else if (piecesG->position.x != 'a') {
+								gameRules[piecesG[*selectedPiece].color].castleL = false;
+							}
+							break;
+					}
+					piecesG[*selectedPiece].position = mouseCords;
+				}
+			}
+
+			//piecesG[*selectedPiece].position = mouseCords;  //temp
+
 			printf("Pawn x: %c\nPawn y: %c\n\n", piecesG[*selectedPiece].position.x,
 					piecesG[*selectedPiece].position.y);
 			*selectedPiece = -1;
 		} else {
 			chessCords mouseCords = mouseToChess();
 			printf("x: %c\ny: %c\n", mouseCords.x, mouseCords.y);
-			for (int i = 0; i < pawnsNumber*2; i++){
+			for (int i = 0; i < totalPieces; i++){
 				if(piecesG[i].position.x == mouseCords.x &&
 						piecesG[i].position.y == mouseCords.y){
 					*selectedPiece = i;
@@ -332,16 +524,22 @@ int movePieces(piece * piecesG, int * selectedPiece){
 
 int drawPieces(piece * piecesG){
 
+
+
 	for (int i = 0; i < totalPieces; i++){
-		DrawTextureEx(*piecesG[i].texture,
-				(Vector2){
-					(float) (chessToMath(piecesG[i].position.x, 1) ) - 
-						(float)(piecesG[i].texture->width*textureScale/2),
-					(float) (chessToMath(piecesG[i].position.y, 2) ) -
-						(float)(piecesG[i].texture->height*textureScale/2)
-					},
-				0, textureScale, 
-				(Color){255,255,255, (unsigned char) (255 * piecesG[i].able) });
+		if(piecesG[i].able){
+			DrawTextureEx(*piecesG[i].texture,
+					(Vector2){
+						(float) (chessToMath(piecesG[i].position.x, 1) ) - 
+							(float)(piecesG[i].texture->width*textureScale/2),
+						(float) (chessToMath(piecesG[i].position.y, 2) ) -
+							(float)(piecesG[i].texture->height*textureScale/2)
+						},
+					0, textureScale, 
+					(Color){255,255,255, 255 });
+		} else {
+			piecesG[i].position.x = -10;
+		}
 	}
 
 

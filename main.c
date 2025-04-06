@@ -15,11 +15,16 @@ int main (){
 	int selectedPiece = -1;
 	chessCords posibleMoves[maxPosibleMoves];
 
+	struct rules gameRules[2] = {
+		{1,1},
+		{1,1}
+	};
+
 	initPieces(piecesG, whiteTextures, blackTextures);
 
 	while (!WindowShouldClose()) {
-		movePieces(piecesG, &selectedPiece);
-		getPosibleMoves(piecesG, selectedPiece, posibleMoves);
+		movePieces(piecesG, &selectedPiece, posibleMoves, gameRules);
+		getPosibleMoves(piecesG, selectedPiece, posibleMoves, gameRules);
 
 
 		BeginDrawing();
@@ -31,7 +36,10 @@ int main (){
 		//getPlaces();
 
 		EndDrawing();
-
+/*
+		printf("1:\tL %i, R %i\n", gameRules[1].castleL, gameRules[1].castleR);
+		printf("2:\tL %i, R %i\n\n", gameRules[0].castleL, gameRules[0].castleR);
+*/
 
 		/*
 		if (selectedPiece >= 0){
