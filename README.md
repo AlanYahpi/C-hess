@@ -20,17 +20,12 @@ Highlights the legal moves based on (almost) all the chess rules. It was a pain 
 ![Highlight](./images/legalMoves.png)
 
 #### Castleing!
-![castle1](.images/castle1.png)
-
-
-![castle2](.images/castle2.png)
-
-
-![castle3](.images/castle3.png)
+![castle1](./images/castle1.png)
+![castle2](./images/castle2.png)
+![castle3](./images/castle3.png)
 
 #### Pawns!
-
-![pawns](.images/pawns!.png)
+![pawns](./images/pawns!.png)
 
 ## Background
 I didn't read any kind of documentation about how a chess game is made, that is why it could be awful, nevertheless, i want to improve it until it can be a chess engine, maybe the worst optimized or functional, but then I would have gotten more knowledge and skills, that's what matters, doesn't it?
