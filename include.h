@@ -11,6 +11,8 @@
 #define screenW 800
 #define screenH 800
 
+#define FRACBLOCK (screenH/8)
+
 #define usrR 255
 #define usrG 255
 #define usrB 255

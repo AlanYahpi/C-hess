@@ -222,22 +222,22 @@ chessCords mouseToChess(){
 	chessCords cordinates;
 
 
-	if (mouseX > 700) {cordinates.x = 'h';}
-	else if (mouseX > 600) {cordinates.x = 'g';}
-	else if (mouseX > 500) {cordinates.x = 'f';}
-	else if (mouseX > 400) {cordinates.x = 'e';}
-	else if (mouseX > 300) {cordinates.x = 'd';}
-	else if (mouseX > 200) {cordinates.x = 'c';}
-	else if (mouseX > 100) {cordinates.x = 'b';}
+	if (mouseX > FRACBLOCK*7) {cordinates.x = 'h';}
+	else if (mouseX > FRACBLOCK*6) {cordinates.x = 'g';}
+	else if (mouseX > FRACBLOCK*5) {cordinates.x = 'f';}
+	else if (mouseX > FRACBLOCK*4) {cordinates.x = 'e';}
+	else if (mouseX > FRACBLOCK*3) {cordinates.x = 'd';}
+	else if (mouseX > FRACBLOCK*2) {cordinates.x = 'c';}
+	else if (mouseX > FRACBLOCK) {cordinates.x = 'b';}
 	else {cordinates.x = 'a';}
 
 	if (mouseY > 700) {cordinates.y = '1';}
-	else if (mouseY > 600) {cordinates.y = '2';}
-	else if (mouseY > 500) {cordinates.y = '3';}
-	else if (mouseY > 400) {cordinates.y = '4';}
-	else if (mouseY > 300) {cordinates.y = '5';}
-	else if (mouseY > 200) {cordinates.y = '6';}
-	else if (mouseY > 100) {cordinates.y = '7';}
+	else if (mouseY > FRACBLOCK*6) {cordinates.y = '2';}
+	else if (mouseY > FRACBLOCK*5) {cordinates.y = '3';}
+	else if (mouseY > FRACBLOCK*4) {cordinates.y = '4';}
+	else if (mouseY > FRACBLOCK*3) {cordinates.y = '5';}
+	else if (mouseY > FRACBLOCK*2) {cordinates.y = '6';}
+	else if (mouseY > FRACBLOCK) {cordinates.y = '7';}
 	else {cordinates.y = '8';}
 
 	return cordinates;
