@@ -21,10 +21,15 @@ Highlights the legal moves based on (almost) all the chess rules. It was a pain 
 
 #### Castleing!
 ![castle1](.images/castle1.png)
+
+
 ![castle2](.images/castle2.png)
+
+
 ![castle3](.images/castle3.png)
 
 #### Pawns!
+
 ![pawns](.images/pawns!.png)
 
 ## Background
