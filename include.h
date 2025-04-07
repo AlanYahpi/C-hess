@@ -71,13 +71,14 @@ int boardDraw(){
 	int sqnum = 1;
 	Color sqColor;
 	Color darkSquareColor = {173,113,235,255};
+	Color lightSquareColor = {255,255,255,255};
 
 	while (ny < screenH){
 		while (nx < screenW) {
 			if (sqnum % 2){
 				sqColor = darkSquareColor;
 			} else {
-				sqColor = (Color){255,255,255,255};
+				sqColor = lightSquareColor;
 			}
 			DrawRectangle(nx, ny, 
 					sqsize, sqsize, 
